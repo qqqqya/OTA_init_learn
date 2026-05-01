@@ -66,7 +66,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	SCB->VTOR = 0x08000000 | 0x019000; //设置向量表偏移地址为0x08000000	//0x8019000
+	SCB->VTOR = 0x08000000 | 0x8000; //设置向量表偏移地址为0x08000000	//0x8019000
 	__enable_irq();
   /* USER CODE END 1 */
 

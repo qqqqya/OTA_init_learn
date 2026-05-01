@@ -29,7 +29,7 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 //#define FALSH_BASE_ADDR 0x08000000//+ 0x00019000
-#define APP_FLASH_ADDR 0x08019000 //APP程序的启动地址-MSP
+#define APP_FLASH_ADDR 0x08008000 //APP程序的启动地址-MSP
 typedef void (*pFunc)(void);      //pFunc 是变量名'，类型是 void (*)(void)。
 pFunc Jump2Application;//函数指针类型--变量 
                         //完全等价与 void (*Jump2Application)(void) 
@@ -63,24 +63,20 @@ void DisablePeriphClock_irq(void){
   __HAL_RCC_RTC_DISABLE();
   ///中断禁用
   __disable_irq(); */
-	  // HAL_UART_DeInit(&huart1);
-  //关闭所有外设时钟/
-  __HAL_RCC_RTC_DISABLE();
-  ///中断禁用
-  __disable_irq();
-//    HAL_DeInit();
-//    HAL_RCC_DeInit();
 
-//    // 关闭所有中断
-//    __set_PRIMASK(1);
-//      // 2. 彻底关闭 SysTick 并且清除所有NVIC中断（极其关键！）
-//    SysTick->CTRL = 0;
-//    SysTick->LOAD = 0;
-//    SysTick->VAL = 0;
-//    for (int i = 0; i < 8; i++) {
-//        NVIC->ICER[i] = 0xFFFFFFFF; // 关闭全部中断
-//        NVIC->ICPR[i] = 0xFFFFFFFF; // 清除所有挂起的中断
-//    }
+    HAL_DeInit();
+    HAL_RCC_DeInit();
+
+    // 关闭所有中断
+    __set_PRIMASK(1);
+      // 2. 彻底关闭 SysTick 并且清除所有NVIC中断（极其关键！）
+    SysTick->CTRL = 0;
+    SysTick->LOAD = 0;
+    SysTick->VAL = 0;
+    for (int i = 0; i < 8; i++) {
+        NVIC->ICER[i] = 0xFFFFFFFF; // 关闭全部中断
+        NVIC->ICPR[i] = 0xFFFFFFFF; // 清除所有挂起的中断
+    }
 }
 /**跳转函数 */
 void Jump2App(void){
@@ -91,9 +87,8 @@ void Jump2App(void){
 	printf("app stack :0x%08X\r\n",armAddr);
 
   if(((*(__IO uint32_t*)APP_FLASH_ADDR) & 0x2FFE0000) == 0x20000000){ //判断地址是否合法//0x2FFE0000
-    printf("jump addr start\r\n");
-    
-DisablePeriphClock_irq();
+    printf("jump addr start\r\n");  
+	DisablePeriphClock_irq();
       /**取出app加载地址0x00019000-》将数字转成指针（地址）-》
        * 将falsh中的地址解引用查到地址中的存好的值-》判断这个值是否是RAM地址-128kb
        * */
@@ -171,7 +166,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   printf("start bootloader main running\r\n");
-   /* USER CODE BEGIN 2 */DisablePeriphClock_irq();
+   /* USER CODE BEGIN 2 */
    Jump2App();
 	
   /* USER CODE END 2 */
