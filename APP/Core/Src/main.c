@@ -55,6 +55,18 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint8_t  g_recv_data[1]; //全局变量，接收数据缓冲区
+
+ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+ /**单字节接收完成回调，是cpu在搬运完成之后的回调
+  * 如果是dma接收，根本不会进这里
+  * �?要在dma中断中处理数�?
+  */
+   // log_i("HAL_UART_RxCpltCallback");
+ HAL_UART_Transmit_IT(&huart1, g_recv_data, 1); //接收完成之后，原封不动的发回�?
+   // /*3、开启下�?次接收中�?*/
+   HAL_UART_Receive_IT(&huart1, g_recv_data, 1);
+ }
 
 /* USER CODE END 0 */
 
@@ -66,7 +78,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	SCB->VTOR = 0x08000000 | 0x8000; //设置向量表偏移地址为0x08000000	//0x8019000
+	SCB->VTOR = 0x08000000 | 0x8000; //设置向量表偏移地�?�?0x08000000	//0x8019000
 	__enable_irq();
   /* USER CODE END 1 */
 
@@ -90,14 +102,16 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+ printf("Hello app!\r\n");
+  HAL_UART_Receive_IT(&huart1, g_recv_data, 1);
+  
   /* USER CODE END 2 */
-printf("hi app\r\n");
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
-	
 
     /* USER CODE BEGIN 3 */
   }

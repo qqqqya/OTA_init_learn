@@ -28,7 +28,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-//#define FALSH_BASE_ADDR 0x08000000//+ 0x00019000
+#define FALSH_BASE_ADDR 0x08000000//+ 0x00019000
 #define APP_FLASH_ADDR 0x08008000 //APP程序的启动地址-MSP
 typedef void (*pFunc)(void);      //pFunc 是变量名'，类型是 void (*)(void)。
 pFunc Jump2Application;//函数指针类型--变量 
@@ -63,11 +63,9 @@ void DisablePeriphClock_irq(void){
   __HAL_RCC_RTC_DISABLE();
   ///中断禁用
   __disable_irq(); */
-
     HAL_DeInit();
     HAL_RCC_DeInit();
-
-    // 关闭所有中断
+    // 关闭所有中断---防止加了rtos出问题
     __set_PRIMASK(1);
       // 2. 彻底关闭 SysTick 并且清除所有NVIC中断（极其关键！）
     SysTick->CTRL = 0;
@@ -80,21 +78,24 @@ void DisablePeriphClock_irq(void){
 }
 /**跳转函数 */
 void Jump2App(void){
-
 //  uint32_t jumpAddr,,i;
 	uint32_t armAddr;
+	
 	armAddr = *(__IO uint32_t*)APP_FLASH_ADDR; //读取app程序的初始堆栈地址
 	printf("app stack :0x%08X\r\n",armAddr);
-
+uint32_t mspAddr;mspAddr = *(__IO uint32_t*)FALSH_BASE_ADDR;
+	printf("msp :0x%08X\r\n",mspAddr);
   if(((*(__IO uint32_t*)APP_FLASH_ADDR) & 0x2FFE0000) == 0x20000000){ //判断地址是否合法//0x2FFE0000
     printf("jump addr start\r\n");  
-	DisablePeriphClock_irq();
+ 	DisablePeriphClock_irq(); 
       /**取出app加载地址0x00019000-》将数字转成指针（地址）-》
        * 将falsh中的地址解引用查到地址中的存好的值-》判断这个值是否是RAM地址-128kb
        * */
     // 1. 从Flash读取应用程序的复位向量地址（PC指针）----这里是ram地址????
     JumpAddress = *(__IO uint32_t*)(APP_FLASH_ADDR + 4);
-    
+//    printf("jump addr :0x%08X\r\n",JumpAddress);
+
+  
     // 2. 把地址转成函数指针类型，赋值给变量
     Jump2Application = (pFunc)JumpAddress;//类型是 void (*)(void)
     // 3. 设置主堆栈指针（MSP）为应用程序的初始堆栈地址
